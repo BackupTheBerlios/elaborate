@@ -12,6 +12,7 @@ static void _dlg_del_cb   (Etk_Object *obj, void *data);
 static void _apply_cb     (Etk_Object *obj, void *data);
 static void _close_cb     (Etk_Object *obj, void *data);
 static void _servs_load   (Etk_Widget *obj, const char *name);
+static void _serv_sel_cb  (Etk_Object *obj, Etk_Tree_Row *row, Etk_Event_Mouse_Up *event, void *data);
 
 ELAPI Gui_Net *gui_net = NULL;
 ELAPI Dlg_Add *dlg_add = NULL;
@@ -61,6 +62,7 @@ el_network(const char *name)
    etk_tree_mode_set(ETK_TREE(gui_net->servers), ETK_TREE_MODE_LIST);
    etk_tree_headers_visible_set(ETK_TREE(gui_net->servers), ETK_FALSE);
    etk_tree_multiple_select_set(ETK_TREE(gui_net->servers), ETK_FALSE);
+   etk_signal_connect("row_clicked", ETK_OBJECT(gui_net->servers), ETK_CALLBACK(_serv_sel_cb), NULL);
      {
 	Etk_Tree_Col *col;
 	
@@ -81,6 +83,14 @@ el_network(const char *name)
    etk_table_attach(ETK_TABLE(t3), button, 0, 0, 1, 1, 0, 0, ETK_TABLE_HFILL);
    
    etk_table_attach(ETK_TABLE(t2), t3, 1, 1, 0, 0, 0, 0, ETK_TABLE_NONE);
+
+   table = etk_table_new(2, 1, ETK_FALSE);
+   etk_box_append(ETK_BOX(vbox), table, ETK_BOX_START, ETK_BOX_FILL, 0);
+   
+   label = etk_label_new(_("Port:"));
+   etk_table_attach(ETK_TABLE(table), label, 0, 0, 0, 0, 3, 0, ETK_TABLE_HFILL);
+   gui_net->port = etk_entry_new();
+   etk_table_attach(ETK_TABLE(table), gui_net->port, 1, 1, 0, 0, 3, 0, ETK_TABLE_HFILL | ETK_TABLE_HEXPAND);
    
    etk_box_append(ETK_BOX(vbox), etk_hseparator_new(), ETK_BOX_END, ETK_BOX_FILL, 5);
    
@@ -108,7 +118,7 @@ _add_cb(Etk_Object *obj, void *data)
    if (!dlg_add) return;
    
    dlg_add->win = etk_dialog_new();
-   etk_widget_size_request_set(dlg_add->win, 250, 150);
+   etk_widget_size_request_set(dlg_add->win, 250, 100);
    etk_signal_connect("delete_event", ETK_OBJECT(dlg_add->win), ETK_CALLBACK(_dlg_del_cb), NULL);
    etk_container_border_width_set(ETK_CONTAINER(dlg_add->win), 3);
    etk_window_title_set(ETK_WINDOW(dlg_add->win), PACKAGE_NAME" - Add Server");
@@ -118,13 +128,8 @@ _add_cb(Etk_Object *obj, void *data)
    etk_dialog_pack_in_main_area(ETK_DIALOG(dlg_add->win), label, ETK_FALSE, ETK_TRUE, 3, ETK_FALSE);
    dlg_add->entry = etk_entry_new();
    etk_dialog_pack_in_main_area(ETK_DIALOG(dlg_add->win), dlg_add->entry, ETK_FALSE, ETK_TRUE, 3, ETK_FALSE);
-
-   label = etk_label_new("Port:");
-   etk_dialog_pack_in_main_area(ETK_DIALOG(dlg_add->win), label, ETK_FALSE, ETK_TRUE, 3, ETK_FALSE);
-   dlg_add->port = etk_entry_new();
-   etk_dialog_pack_in_main_area(ETK_DIALOG(dlg_add->win), dlg_add->port, ETK_FALSE, ETK_TRUE, 3, ETK_FALSE);
    
-   button = etk_dialog_button_add_from_stock(ETK_DIALOG(dlg_add->win), ETK_STOCK_DIALOG_APPLY, ETK_RESPONSE_APPLY);
+   button = etk_dialog_button_add_from_stock(ETK_DIALOG(dlg_add->win), ETK_STOCK_DIALOG_OK, ETK_RESPONSE_OK);
    button = etk_dialog_button_add_from_stock(ETK_DIALOG(dlg_add->win), ETK_STOCK_DIALOG_CANCEL, ETK_RESPONSE_CANCEL);
 
    etk_signal_connect("response", ETK_OBJECT(dlg_add->win), ETK_CALLBACK(_add_resp_cb), dlg_add);
@@ -137,18 +142,20 @@ _add_cb(Etk_Object *obj, void *data)
 static void 
 _add_resp_cb(Etk_Object *obj, int response_id, void *data) 
 {
+   Etk_Tree_Row *row;
    Etk_Tree_Col *col;
-   const char *n, *p;
+   const char *n;
 
    col = etk_tree_nth_col_get(ETK_TREE(gui_net->servers), 0);
    n = etk_entry_text_get(ETK_ENTRY(dlg_add->entry));
-   p = etk_entry_text_get(ETK_ENTRY(dlg_add->port));
    switch (response_id) 
      {
-      case ETK_RESPONSE_APPLY:
+      case ETK_RESPONSE_OK:
 	if (!n) break;
 	etk_tree_freeze(ETK_TREE(gui_net->servers));
-	etk_tree_append(ETK_TREE(gui_net->servers), col, n, NULL);
+	row = etk_tree_append(ETK_TREE(gui_net->servers), col, n, NULL);
+	etk_tree_row_select(row);
+	etk_tree_row_scroll_to(row, ETK_TRUE);
 	etk_tree_thaw(ETK_TREE(gui_net->servers));
 	break;
       default:
@@ -265,4 +272,29 @@ _servs_load(Etk_Widget *obj, const char *name)
 	break;
      }
    etk_tree_thaw(ETK_TREE(obj));
+}
+
+static void 
+_serv_sel_cb(Etk_Object *obj, Etk_Tree_Row *row, Etk_Event_Mouse_Up *event, void *data) 
+{
+   Etk_Tree_Col *col;
+   Evas_List *l;
+   char *n;
+   
+   if (!gui_net->cfg_net) return;
+   col = etk_tree_nth_col_get(ETK_TREE(obj), 0);
+   if (!col) return;
+   etk_tree_row_fields_get(row, col, &n, NULL);
+   for (l = gui_net->cfg_net->servers; l; l = l->next) 
+     {
+	Config_Network_Server *cs;
+	char buf[256];
+	
+	cs = l->data;
+	if (!cs) continue;
+	if (strcmp(cs->address, n)) continue;
+	snprintf(buf, sizeof(buf), "%i", cs->port);
+	etk_entry_text_set(ETK_ENTRY(gui_net->port), buf);
+	break;
+     }
 }
