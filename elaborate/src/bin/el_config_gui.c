@@ -7,8 +7,6 @@
 #include "el.h"
 #include "el_config.h"
 #include "el_config_gui.h"
-#include "el_network.h"
-#include "el_network_gui.h"
 
 static void _config_gui_shutdown (Etk_Object *obj, void *data);
 static void _apply_cb            (Etk_Object *obj, void *data);
@@ -129,7 +127,7 @@ el_configure(void)
 static void
 _config_gui_shutdown(Etk_Object *obj, void *data) 
 {
-   el_network_shutdown();
+//   el_network_shutdown();
    etk_object_destroy(ETK_OBJECT(obj));
    EL_FREE(gui_cfg);
 }
