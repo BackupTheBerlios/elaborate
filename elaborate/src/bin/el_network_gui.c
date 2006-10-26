@@ -16,6 +16,7 @@ static void _close_cb     (Etk_Object *obj, void *data);
 static void _servs_load   (Etk_Widget *obj, const char *name);
 static void _serv_sel_cb  (Etk_Object *obj, Etk_Tree_Row *row, Etk_Event_Mouse_Up *event, void *data);
 static void _serv_del_cb  (void);
+static void _serv_add_cb  (const char *name);
 
 ELAPI Gui_Net *gui_net = NULL;
 ELAPI Dlg_Add *dlg_add = NULL;
@@ -146,27 +147,21 @@ _add_cb(Etk_Object *obj, void *data)
 static void 
 _add_resp_cb(Etk_Object *obj, int response_id, void *data) 
 {
-   Etk_Tree_Row *row;
-   Etk_Tree_Col *col;
    const char *n;
 
-   col = etk_tree_nth_col_get(ETK_TREE(gui_net->servers), 0);
    n = etk_entry_text_get(ETK_ENTRY(dlg_add->entry));
+   etk_object_destroy(ETK_OBJECT(obj));
+   EL_FREE(dlg_add);
+   if (!n) return;
+   
    switch (response_id) 
      {
       case ETK_RESPONSE_OK:
-	if (!n) break;
-	etk_tree_freeze(ETK_TREE(gui_net->servers));
-	row = etk_tree_append(ETK_TREE(gui_net->servers), col, n, NULL);
-	etk_tree_row_select(row);
-	etk_tree_row_scroll_to(row, ETK_TRUE);
-	etk_tree_thaw(ETK_TREE(gui_net->servers));
+	_serv_add_cb(n);
 	break;
       default:
 	break;
      }
-   etk_object_destroy(ETK_OBJECT(obj));
-   EL_FREE(dlg_add);
 }
 
 static void 
@@ -189,7 +184,9 @@ _del_cb(Etk_Object *obj, void *data)
 		      ETK_CALLBACK(_del_resp_cb), NULL);
    etk_container_border_width_set(ETK_CONTAINER(dlg), 3);
    etk_window_title_set(ETK_WINDOW(dlg), PACKAGE_NAME" - Confirm Delete");
-   
+
+   etk_window_modal_for_window(ETK_WINDOW(dlg), ETK_WINDOW(gui_net->win));
+   etk_window_center_on_window(ETK_WINDOW(dlg), ETK_WINDOW(gui_net->win));
    etk_widget_show_all(dlg);
 }
 
@@ -314,6 +311,7 @@ _servs_load(Etk_Widget *obj, const char *name)
 	break;
      }
    etk_tree_thaw(ETK_TREE(obj));
+   etk_entry_clear(ETK_ENTRY(gui_net->port));
 }
 
 static void 
@@ -369,5 +367,18 @@ _serv_del_cb(void)
 	EL_FREE(cs);
 	break;
      }
+   _servs_load(gui_net->servers, gui_net->cfg_net->name);
+}
+
+static void 
+_serv_add_cb(const char *name) 
+{
+   Config_Network_Server *cs;
+   
+   if (!name) return;
+   cs = EL_NEW(Config_Network_Server, 1);
+   cs->address = evas_stringshare_add(name);
+   cs->port = 6667;
+   gui_net->cfg_net->servers = evas_list_append(gui_net->cfg_net->servers, cs);
    _servs_load(gui_net->servers, gui_net->cfg_net->name);
 }
