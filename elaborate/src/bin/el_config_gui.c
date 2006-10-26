@@ -11,10 +11,10 @@
 static void _config_gui_shutdown (Etk_Object *obj, void *data);
 static void _apply_cb            (Etk_Object *obj, void *data);
 static void _close_cb            (Etk_Object *obj, void *data);
-static void _tree_load           (Etk_Widget *obj);
-static void _add_cb              (Etk_Object *obj, void *data);
-static void _edit_cb             (Etk_Object *obj, void *data);
-static void _remove_cb           (Etk_Object *obj, void *data);
+//static void _tree_load           (Etk_Widget *obj);
+//static void _add_cb              (Etk_Object *obj, void *data);
+//static void _edit_cb             (Etk_Object *obj, void *data);
+//static void _remove_cb           (Etk_Object *obj, void *data);
 
 ELAPI Config_Gui *gui_cfg = NULL;
 
@@ -81,13 +81,13 @@ el_configure(void)
 			       etk_tree_model_text_new(ETK_TREE(nets)), 90);
 	etk_tree_build(ETK_TREE(nets));
 	
-	_tree_load(nets);
+//	_tree_load(nets);
      }
    etk_table_attach(ETK_TABLE(t2), nets, 0, 0, 0, 4, 3, 0, ETK_TABLE_EXPAND_FILL);
 
    button = etk_button_new_from_stock(ETK_STOCK_LIST_ADD);
-   etk_signal_connect_swapped("clicked", ETK_OBJECT(button), 
-				ETK_CALLBACK(_add_cb), NULL);
+//   etk_signal_connect_swapped("clicked", ETK_OBJECT(button), 
+//				ETK_CALLBACK(_add_cb), NULL);
    etk_table_attach(ETK_TABLE(t3), button, 0, 0, 0, 0, 0, 0, ETK_TABLE_HFILL);
 
    icon = etk_image_new_from_stock(ETK_STOCK_EDIT_CUT, ETK_STOCK_SMALL);
@@ -95,13 +95,13 @@ el_configure(void)
    button = etk_button_new();
    etk_button_label_set(ETK_BUTTON(button), _("Edit"));
    etk_button_image_set(ETK_BUTTON(button), ETK_IMAGE(icon));
-   etk_signal_connect_swapped("clicked", ETK_OBJECT(button), 
-				ETK_CALLBACK(_edit_cb), nets);
+//   etk_signal_connect_swapped("clicked", ETK_OBJECT(button), 
+//				ETK_CALLBACK(_edit_cb), nets);
    etk_table_attach(ETK_TABLE(t3), button, 0, 0, 1, 1, 0, 0, ETK_TABLE_HFILL);
    
    button = etk_button_new_from_stock(ETK_STOCK_LIST_REMOVE);
-   etk_signal_connect_swapped("clicked", ETK_OBJECT(button), 
-				ETK_CALLBACK(_remove_cb), nets);
+//   etk_signal_connect_swapped("clicked", ETK_OBJECT(button), 
+//				ETK_CALLBACK(_remove_cb), nets);
    etk_table_attach(ETK_TABLE(t3), button, 0, 0, 2, 2, 0, 0, ETK_TABLE_HFILL);
    
    etk_table_attach(ETK_TABLE(t2), t3, 1, 1, 0, 0, 0, 0, ETK_TABLE_NONE);
@@ -127,7 +127,6 @@ el_configure(void)
 static void
 _config_gui_shutdown(Etk_Object *obj, void *data) 
 {
-//   el_network_shutdown();
    etk_object_destroy(ETK_OBJECT(obj));
    EL_FREE(gui_cfg);
 }
@@ -173,20 +172,11 @@ _apply_cb(Etk_Object *obj, void *data)
 static void 
 _close_cb(Etk_Object *obj, void *data) 
 {
-   el_network_shutdown();
-
-   if (dlg_add)
-     etk_object_destroy(ETK_OBJECT(dlg_add->win));
-   EL_FREE(dlg_add);
-   
-   if (gui_net)
-     etk_object_destroy(ETK_OBJECT(gui_net->win));
-   EL_FREE(gui_net);
-   
    etk_object_destroy(ETK_OBJECT(obj));
    EL_FREE(gui_cfg);
 }
 
+/*
 static void 
 _tree_load(Etk_Widget *obj) 
 {
@@ -258,3 +248,4 @@ _remove_cb(Etk_Object *obj, void *data)
    
    etk_tree_row_fields_get(r, col, &c, NULL);
 }
+*/

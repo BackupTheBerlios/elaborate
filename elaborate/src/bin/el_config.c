@@ -10,28 +10,10 @@
 ELAPI Config *el_config = NULL;
 
 static EL_Config_DD *_el_config_edd = NULL;
-static EL_Config_DD *_el_config_server_edd = NULL;
-static EL_Config_DD *_el_config_channel_edd = NULL;
 
 ELAPI int
 el_config_init(void) 
 {
-   _el_config_channel_edd = EL_CONFIG_DD_NEW("EL_Config_Channel", Config_Channel);
-   #undef T
-   #undef D
-   #define T Config_Channel
-   #define D _el_config_channel_edd
-   EL_CONFIG_VAL(D, T, name, EET_T_STRING);
-   
-   _el_config_server_edd = EL_CONFIG_DD_NEW("EL_Config_Server", Config_Server);
-   #undef T
-   #undef D
-   #define T Config_Server
-   #define D _el_config_server_edd
-   EL_CONFIG_VAL(D, T, address, EET_T_STRING);
-   EL_CONFIG_VAL(D, T, port, EET_T_INT);
-   EL_CONFIG_LIST(D, T, channels, _el_config_channel_edd);
-   
    _el_config_edd = EL_CONFIG_DD_NEW("EL_Config", Config);
    #undef T
    #undef D
@@ -41,7 +23,6 @@ el_config_init(void)
    EL_CONFIG_VAL(D, T, realname, EET_T_STRING);
    EL_CONFIG_VAL(D, T, nickname, EET_T_STRING);
    EL_CONFIG_VAL(D, T, password, EET_T_STRING);
-   EL_CONFIG_SUB(D, T, server, _el_config_channel_edd);
    
    el_config = el_config_load();
    if (!el_config) 
@@ -62,8 +43,6 @@ el_config_shutdown(void)
 {
    EL_FREE(el_config);
    EL_CONFIG_DD_FREE(_el_config_edd);
-   EL_CONFIG_DD_FREE(_el_config_server_edd);
-   EL_CONFIG_DD_FREE(_el_config_channel_edd);
    return 1;
 }
 

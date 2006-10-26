@@ -9,8 +9,6 @@
 #define EL_CONFIG_LIST(edd, type, member, eddtype) EET_DATA_DESCRIPTOR_ADD_LIST(edd, type, #member, member, eddtype)
 
 typedef struct _Config Config;
-typedef struct _Config_Server Config_Server;
-typedef struct _Config_Channel Config_Channel;
 
 typedef Eet_Data_Descriptor EL_Config_DD;
 
@@ -20,19 +18,6 @@ struct _Config
    const char *realname;
    const char *nickname;
    const char *password;
-   Config_Server *server;
-};
-
-struct _Config_Server 
-{
-   const char *address;
-   int port;
-   Evas_List *channels;
-};
-
-struct _Config_Channel 
-{
-   const char *name;
 };
 
 ELAPI int   el_config_init     (void);
