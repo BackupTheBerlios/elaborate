@@ -8,11 +8,14 @@
 
 static void _add_cb       (Etk_Object *obj, void *data);
 static void _add_resp_cb  (Etk_Object *obj, int response_id, void *data);
+static void _del_cb       (Etk_Object *obj, void *data);
+static void _del_resp_cb  (Etk_Object *obj, int response_id, void *data);
 static void _dlg_del_cb   (Etk_Object *obj, void *data);
 static void _apply_cb     (Etk_Object *obj, void *data);
 static void _close_cb     (Etk_Object *obj, void *data);
 static void _servs_load   (Etk_Widget *obj, const char *name);
 static void _serv_sel_cb  (Etk_Object *obj, Etk_Tree_Row *row, Etk_Event_Mouse_Up *event, void *data);
+static void _serv_del_cb  (void);
 
 ELAPI Gui_Net *gui_net = NULL;
 ELAPI Dlg_Add *dlg_add = NULL;
@@ -80,6 +83,7 @@ el_network(const char *name)
    etk_table_attach(ETK_TABLE(t3), button, 0, 0, 0, 0, 0, 0, ETK_TABLE_HFILL);
 
    button = etk_button_new_from_stock(ETK_STOCK_LIST_REMOVE);
+   etk_signal_connect("clicked", ETK_OBJECT(button), ETK_CALLBACK(_del_cb), NULL);
    etk_table_attach(ETK_TABLE(t3), button, 0, 0, 1, 1, 0, 0, ETK_TABLE_HFILL);
    
    etk_table_attach(ETK_TABLE(t2), t3, 1, 1, 0, 0, 0, 0, ETK_TABLE_NONE);
@@ -163,6 +167,44 @@ _add_resp_cb(Etk_Object *obj, int response_id, void *data)
      }
    etk_object_destroy(ETK_OBJECT(obj));
    EL_FREE(dlg_add);
+}
+
+static void 
+_del_cb(Etk_Object *obj, void *data) 
+{
+   Etk_Tree_Row *row;
+   Etk_Tree_Col *col;
+   Etk_Widget *dlg;
+   const char *n;
+   char buf[4096];
+   
+   col = etk_tree_nth_col_get(ETK_TREE(gui_net->servers), 0);
+   row = etk_tree_selected_row_get(ETK_TREE(gui_net->servers));
+   etk_tree_row_fields_get(row, col, &n, NULL);
+
+   snprintf(buf, sizeof(buf), _("Are you sure you want to delete %s ?"), n);
+   dlg = etk_message_dialog_new(ETK_MESSAGE_DIALOG_QUESTION, 
+				ETK_MESSAGE_DIALOG_YES_NO, buf);
+   etk_signal_connect("response", ETK_OBJECT(dlg), 
+		      ETK_CALLBACK(_del_resp_cb), NULL);
+   etk_container_border_width_set(ETK_CONTAINER(dlg), 3);
+   etk_window_title_set(ETK_WINDOW(dlg), PACKAGE_NAME" - Confirm Delete");
+   
+   etk_widget_show_all(dlg);
+}
+
+static void 
+_del_resp_cb(Etk_Object *obj, int response_id, void *data) 
+{
+   etk_object_destroy(ETK_OBJECT(obj));
+   switch (response_id) 
+     {
+      case ETK_RESPONSE_YES:
+	_serv_del_cb();
+	break;
+      default:
+	break;
+     }
 }
 
 static void 
@@ -297,4 +339,35 @@ _serv_sel_cb(Etk_Object *obj, Etk_Tree_Row *row, Etk_Event_Mouse_Up *event, void
 	etk_entry_text_set(ETK_ENTRY(gui_net->port), buf);
 	break;
      }
+}
+
+static void 
+_serv_del_cb(void) 
+{
+   Etk_Tree_Row *row;
+   Etk_Tree_Col *col;
+   Evas_List *l;
+   char *n;
+   
+   if (!gui_net->cfg_net) return;
+   col = etk_tree_nth_col_get(ETK_TREE(gui_net->servers), 0);
+   if (!col) return;
+   row = etk_tree_selected_row_get(ETK_TREE(gui_net->servers));
+   if (!row) return;
+   
+   etk_tree_row_fields_get(row, col, &n, NULL);
+   for (l = gui_net->cfg_net->servers; l; l = l->next) 
+     {
+	Config_Network_Server *cs;
+	
+	cs = l->data;
+	if (!cs) continue;
+	if (strcmp(cs->address, n)) continue;
+	if (cs->address)
+	  evas_stringshare_del(cs->address);
+	gui_net->cfg_net->servers = evas_list_remove(gui_net->cfg_net->servers, cs);
+	EL_FREE(cs);
+	break;
+     }
+   _servs_load(gui_net->servers, gui_net->cfg_net->name);
 }
