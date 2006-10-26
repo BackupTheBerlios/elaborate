@@ -175,6 +175,7 @@ _del_cb(Etk_Object *obj, void *data)
    
    col = etk_tree_nth_col_get(ETK_TREE(gui_net->servers), 0);
    row = etk_tree_selected_row_get(ETK_TREE(gui_net->servers));
+   if (!row) return;
    etk_tree_row_fields_get(row, col, &n, NULL);
 
    snprintf(buf, sizeof(buf), _("Are you sure you want to delete %s ?"), n);
