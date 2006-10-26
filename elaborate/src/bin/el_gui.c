@@ -122,7 +122,7 @@ el_gui_init(void)
 
 //	snprintf(buf, sizeof(buf), "%s/images/op.png", PACKAGE_DATA_DIR);
 	etk_tree_freeze(ETK_TREE(gui->users));
-	etk_tree_append(ETK_TREE(gui->users), col, buf, _("Devilhorns"), NULL);
+//	etk_tree_append(ETK_TREE(gui->users), col, buf, _("Devilhorns"), NULL);
 	etk_tree_thaw(ETK_TREE(gui->users));
      }
    
