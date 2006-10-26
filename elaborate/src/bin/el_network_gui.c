@@ -108,7 +108,7 @@ _add_cb(Etk_Object *obj, void *data)
    if (!dlg_add) return;
    
    dlg_add->win = etk_dialog_new();
-   etk_widget_size_request_set(dlg_add->win, 225, 100);
+   etk_widget_size_request_set(dlg_add->win, 250, 150);
    etk_signal_connect("delete_event", ETK_OBJECT(dlg_add->win), ETK_CALLBACK(_dlg_del_cb), NULL);
    etk_container_border_width_set(ETK_CONTAINER(dlg_add->win), 3);
    etk_window_title_set(ETK_WINDOW(dlg_add->win), PACKAGE_NAME" - Add Server");
