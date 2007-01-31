@@ -91,9 +91,8 @@ el_gui_init(void)
    etk_notebook_page_append(ETK_NOTEBOOK(gui->note), _("Channel"), gui->tv_chat);
    etk_table_attach(ETK_TABLE(table), gui->note, 0, 1, 0, 0, 0, 0, ETK_TABLE_EXPAND_FILL);
 
-   Etk_Widget *icon;
-   
-   icon = etk_image_new_from_file(buf);
+//   Etk_Widget *icon;
+//   icon = etk_image_new_from_file(buf);
    
 //   hdl = etk_label_new(_("Devilhorns"));
    hdl = etk_button_new();
@@ -115,9 +114,13 @@ el_gui_init(void)
      {
 	Etk_Tree_Col *col;
 	
+	/*
 	col = etk_tree_col_new(ETK_TREE(gui->users), NULL, 
 	      etk_tree_model_icon_text_new(ETK_TREE(gui->users), 
 					   ETK_TREE_FROM_FILE), 90);
+	 */
+	col = etk_tree_col_new(ETK_TREE(gui->users), NULL, 90, 0.0);
+	
 	etk_tree_build(ETK_TREE(gui->users));
 
 //	snprintf(buf, sizeof(buf), "%s/images/op.png", PACKAGE_DATA_DIR);

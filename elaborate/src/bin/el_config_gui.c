@@ -77,8 +77,7 @@ el_configure(void)
      {
 	Etk_Tree_Col *col;
 	
-	col = etk_tree_col_new(ETK_TREE(nets), NULL, 
-			       etk_tree_model_text_new(ETK_TREE(nets)), 90);
+	col = etk_tree_col_new(ETK_TREE(nets), NULL, 90, 0.0);
 	etk_tree_build(ETK_TREE(nets));
 	
 //	_tree_load(nets);
